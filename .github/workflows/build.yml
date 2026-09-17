@@ -1,0 +1,64 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      release-version:
+        type: string
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify (Java ${{ matrix.java }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['17', '21']
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v6.0.1
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+      - name: Set release version
+        if: inputs.release-version != ''
+        env:
+          RELEASE_VERSION: ${{ inputs.release-version }}
+        run: |
+          [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]
+          mvn -B -ntp versions:set -DnewVersion="$RELEASE_VERSION" -DgenerateBackupPoms=false
+      - name: Test, analyze and package
+        run: mvn -B -ntp clean verify -Dspotless.check.skip=false
+      - name: Checksum HPI
+        working-directory: target
+        run: sha256sum daocloud-amamba.hpi > SHA256SUMS
+      - name: Upload plugin
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: plugin-java-${{ matrix.java }}
+          path: |
+            target/daocloud-amamba.hpi
+            target/SHA256SUMS
+          if-no-files-found: error
+      - name: Upload test and analysis reports
+        if: always()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: reports-java-${{ matrix.java }}
+          path: |
+            target/surefire-reports/
+            target/spotbugsXml.xml
+          retention-days: 14
