@@ -13,7 +13,7 @@ mvn verify
 在 Jenkins **Manage Jenkins → Plugins → Advanced settings** 上传 `target/daocloud-amamba.hpi`，按提示重启。
 
 1. 创建 **System** 范围的 **Secret text** 凭据，内容为平台访问令牌（不包含 `Bearer `）。令牌需要具有目标工作空间的读取权限；由管理员负责轮换。
-2. 在 **Manage Jenkins → System → DaoCloud Amamba** 配置平台入口 URL、凭据 ID 和请求超时（默认 5 秒，范围 1–300 秒）。支持入口路径前缀；不要填入具体 API 路径。
+2. 在 **Manage Jenkins → System → DaoCloud Amamba** 配置平台入口 URL、凭据 ID 和请求超时（默认 5 秒，范围 1–300 秒）。平台入口 URL 默认为集群内地址 `http://istio-ingressgateway.istio-system.svc.cluster.local`，运行在 DCE5 集群内的 controller（内置 Jenkins）开箱即用；集群外的 controller 需改为外部的 DCE5 入口 URL。支持入口路径前缀；不要填入具体 API 路径。
 3. 启用 **Inject DCE5_WORKSPACE_NAME**。默认关闭。
 
 也可以使用 Configuration as Code 插件配置：
