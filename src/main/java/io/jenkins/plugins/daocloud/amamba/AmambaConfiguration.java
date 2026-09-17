@@ -11,7 +11,12 @@ import org.kohsuke.stapler.StaplerRequest2;
 @Extension
 @Symbol("daocloudAmamba")
 public final class AmambaConfiguration extends GlobalConfiguration {
-    private String platformUrl = "";
+    // Default targets the istio ingress gateway service so controllers running inside the
+    // DCE5 cluster (the bundled Jenkins) work without configuration. The gateway serves the
+    // same routing as the external entry (its port 80 is exposed as the entry node port);
+    // HTTP is intentional because the TLS certificate does not cover the in-cluster name.
+    // Controllers outside the cluster must override this with the external DCE5 entry URL.
+    private String platformUrl = "http://istio-ingressgateway.istio-system.svc.cluster.local";
     private String credentialsId = "";
     private int requestTimeoutSeconds = 5;
     private WorkspaceEnvironmentConfiguration workspaceEnvironment = new WorkspaceEnvironmentConfiguration(false);
